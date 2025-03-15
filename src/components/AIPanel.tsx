@@ -2,22 +2,24 @@
 import { useState } from "react";
 
 const AIPanel = () => {
-  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const [uploadedFiles, setUploadedFiles] = useState<string[]>([]);
   const [chatHistory, setChatHistory] = useState<{ role: string; text: string }[]>([]);
   const [message, setMessage] = useState("");
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     if (event.target.files && event.target.files.length > 0) {
-      setSelectedFile(event.target.files[0]);
+      setSelectedFiles(Array.from(event.target.files));
     }
   };
 
   const handleUpload = async () => {
-    if (!selectedFile) return;
+    if (selectedFiles.length === 0) return;
 
     const formData = new FormData();
-    formData.append("file", selectedFile);
+    selectedFiles.forEach((file) => {
+      formData.append("files", file);
+    });
 
     try {
       const response = await fetch("/api/upload", {
@@ -27,13 +29,14 @@ const AIPanel = () => {
 
       if (response.ok) {
         const data = await response.json();
-        setUploadedFiles([...uploadedFiles, data.filePath]);
-        alert("File berhasil diunggah!");
+        setUploadedFiles([...uploadedFiles, ...data.filePaths]);
+        alert("Files uploaded successfully!");
+        setSelectedFiles([]);
       } else {
-        alert("Gagal mengunggah file.");
+        alert("Failed to upload files.");
       }
     } catch (error) {
-      console.error("Error uploading file:", error);
+      console.error("Error uploading files:", error);
     }
   };
 
@@ -63,13 +66,18 @@ const AIPanel = () => {
     <div className="p-4 border rounded bg-gray-800 text-white">
       <h2 className="text-lg font-semibold">AI Panel</h2>
 
-      {/* Upload File */}
-      <input type="file" onChange={handleFileChange} className="mt-2" />
+      {/* Upload Files */}
+      <input 
+        type="file" 
+        onChange={handleFileChange} 
+        className="mt-2" 
+        multiple
+      />
       <button
         onClick={handleUpload}
         className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded mt-2"
       >
-        Upload File
+        Upload Files ({selectedFiles.length} selected)
       </button>
 
       {/* Daftar File yang Sudah Diupload */}
