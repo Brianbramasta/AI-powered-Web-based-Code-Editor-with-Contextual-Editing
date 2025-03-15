@@ -8,7 +8,13 @@ interface FileNode {
   children: FileNode[] | null;
 }
 
-const Sidebar = ({ onFileOpen }: { onFileOpen: (filePath: string) => void }) => {
+interface SidebarProps {
+  onFileOpen: (filePath: string) => void;
+  attachMode?: boolean;
+  onFileAttach?: (filePath: string) => void;
+}
+
+const Sidebar = ({ onFileOpen, attachMode = false, onFileAttach }: SidebarProps) => {
   const [fileStructure, setFileStructure] = useState<FileNode[]>([]);
   const [openFolders, setOpenFolders] = useState<Record<string, boolean>>({});
 
@@ -125,11 +131,24 @@ const Sidebar = ({ onFileOpen }: { onFileOpen: (filePath: string) => void }) => 
                   )}
                 </div>
               ) : (
-                <div
-                  className="cursor-pointer hover:text-white"
-                  onClick={() => onFileOpen(fullPath)}
-                >
-                  📄 {node.name}
+                <div className="flex items-center justify-between">
+                  <div
+                    className="cursor-pointer hover:text-white flex-grow"
+                    onClick={() => onFileOpen(fullPath)}
+                  >
+                    📄 {node.name}
+                  </div>
+                  {attachMode && onFileAttach && (
+                    <span
+                      className="cursor-pointer hover:text-green-500 px-2"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onFileAttach(fullPath);
+                      }}
+                    >
+                      ➕
+                    </span>
+                  )}
                 </div>
               )}
               {node.isDirectory && openFolders[fullPath] && node.children

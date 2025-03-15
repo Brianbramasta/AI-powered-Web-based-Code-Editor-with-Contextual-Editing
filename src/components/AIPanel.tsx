@@ -1,11 +1,23 @@
 "use client"
-import { useState } from "react";
+import { forwardRef, useImperativeHandle, useState } from "react";
 
-const AIPanel = () => {
+interface AIPanelProps {
+  onAttachModeChange: (mode: boolean) => void;
+}
+
+const AIPanel = forwardRef<any, AIPanelProps>(({ onAttachModeChange }, ref) => {
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const [uploadedFiles, setUploadedFiles] = useState<string[]>([]);
   const [chatHistory, setChatHistory] = useState<{ role: string; text: string }[]>([]);
   const [message, setMessage] = useState("");
+  const [attachMode, setAttachMode] = useState(false);
+  const [attachedFiles, setAttachedFiles] = useState<string[]>([]);
+
+  useImperativeHandle(ref, () => ({
+    handleFileAttach: (filePath: string) => {
+      handleFileAttach(filePath);
+    }
+  }));
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     if (event.target.files && event.target.files.length > 0) {
@@ -62,9 +74,39 @@ const AIPanel = () => {
     }
   };
 
+  const handleFileAttach = (filePath: string) => {
+    if (attachedFiles.length >= 10) {
+      alert("Maximum 10 files can be attached");
+      return;
+    }
+    if (!attachedFiles.includes(filePath)) {
+      setAttachedFiles([...attachedFiles, filePath]);
+    }
+  };
+
+  const handleRemoveAttachedFile = (filePath: string) => {
+    setAttachedFiles(attachedFiles.filter(f => f !== filePath));
+  };
+
+  const toggleAttachMode = () => {
+    const newMode = !attachMode;
+    setAttachMode(newMode);
+    onAttachModeChange(newMode);
+  };
+
   return (
     <div className="p-4 border rounded bg-gray-800 text-white">
-      <h2 className="text-lg font-semibold">AI Panel</h2>
+      <div className="flex justify-between items-center mb-4">
+        <h2 className="text-lg font-semibold">AI Panel</h2>
+        <button
+          onClick={toggleAttachMode}
+          className={`px-4 py-2 rounded ${
+            attachMode ? 'bg-green-500' : 'bg-blue-500'
+          } hover:opacity-90`}
+        >
+          {attachMode ? 'Done Attaching' : 'Attach Files'}
+        </button>
+      </div>
 
       {/* Upload Files */}
       <input 
@@ -89,6 +131,29 @@ const AIPanel = () => {
           ))}
         </ul>
       </div>
+
+      {/* Display attached files */}
+      {attachedFiles.length > 0 && (
+        <div className="mt-2 mb-4">
+          <h3 className="text-sm font-semibold mb-2">Attached Files:</h3>
+          <div className="flex flex-wrap gap-2">
+            {attachedFiles.map((file) => (
+              <div 
+                key={file} 
+                className="flex items-center bg-gray-700 px-2 py-1 rounded"
+              >
+                <span className="text-sm">{file.split('/').pop()}</span>
+                <button
+                  onClick={() => handleRemoveAttachedFile(file)}
+                  className="ml-2 text-red-400 hover:text-red-300"
+                >
+                  ✕
+                </button>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Chat Box */}
       <div className="mt-4 p-2 border rounded bg-gray-900">
@@ -117,8 +182,11 @@ const AIPanel = () => {
       </div>
     </div>
   );
-};
+});
 
+AIPanel.displayName = 'AIPanel';
+
+export { AIPanel };
 export default AIPanel;
 
 
