@@ -25,28 +25,47 @@ export async function POST(req: Request) {
     const completion = await anthropic.messages.create({
       messages: [{
         role: "user",
-        content: `You are an AI programming assistant. As Claude, analyze the following code and suggest improvements. Provide specific changes in a structured format that can be automatically applied.
+        content: `You are an AI programming assistant. Your task is to suggest code changes and return them in a specific JSON format.
 
 Context:
 ${fileContexts}
 
 User Query: ${message}
 
-Please format your response to include:
-1. A clear explanation of the changes
-2. The exact code modifications in a structured JSON format like:
+IMPORTANT: Your response must follow this exact format:
+1. A brief explanation of the changes
+2. Then a JSON block wrapped in \`\`\`json\n and \n\`\`\` containing:
 {
-  "file": "path/to/file",
+  "file": "<full file path>",
   "changes": [{
-    "content": "new code here",
+    "content": "<complete new content>",
+    "range": {
+      "startLine": <number>,
+      "startColumn": <number>,
+      "endLine": <number>,
+      "endColumn": <number>
+    }
+  }]
+}
+
+Example response:
+Here's how to add a login button:
+
+\`\`\`json
+{
+  "file": "/pages/index.js",
+  "changes": [{
+    "content": "export default function Home() {\\n  return (\\n    <div>\\n      <h1>Hello World</h1>\\n      <button>Login</button>\\n    </div>\\n  );\\n}",
     "range": {
       "startLine": 1,
       "startColumn": 1,
-      "endLine": 1,
+      "endLine": 5,
       "endColumn": 1
     }
   }]
-}`
+}
+\`\`\`
+`
       }],
       model: "claude-2",
       max_tokens: 1024,
@@ -57,15 +76,14 @@ Please format your response to include:
     let suggestions = [];
     
     try {
-      // Attempt to extract JSON from the response
       const match = response.match(/```json\n([\s\S]*?)\n```/);
       if (match) {
-        const parsed = JSON.parse(match[1]);
-        // Ensure suggestions is an array
-        suggestions = Array.isArray(parsed) ? parsed : [parsed];
+        const parsed = JSON.parse(match[1].trim());
+        suggestions = [parsed]; // Wrap single suggestion in array
       }
     } catch (e) {
       console.error('Failed to parse AI suggestions:', e);
+      console.log('Raw response:', response);
     }
 
     // Get original content for each suggestion
