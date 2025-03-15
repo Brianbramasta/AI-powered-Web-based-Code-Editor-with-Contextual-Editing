@@ -19,6 +19,24 @@ const CodeEditor: React.FC<CodeEditorProps> = ({ filePath }) => {
     }
   }, [filePath]);
 
+  useEffect(() => {
+    const handleAISuggestion = (event: CustomEvent) => {
+      const suggestion = event.detail;
+      if (suggestion.file === filePath) {
+        // Terapkan perubahan yang disarankan
+        suggestion.changes.forEach(change => {
+          setFileContent(change.content);
+          setIsDirty(true);
+        });
+      }
+    };
+
+    window.addEventListener('ai-suggestion', handleAISuggestion as EventListener);
+    return () => {
+      window.removeEventListener('ai-suggestion', handleAISuggestion as EventListener);
+    };
+  }, [filePath]);
+
   const handleEditorChange = (value: string | undefined) => {
     if (value !== undefined) {
       setFileContent(value);

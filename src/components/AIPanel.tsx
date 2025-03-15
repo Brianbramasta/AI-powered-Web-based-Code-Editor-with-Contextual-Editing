@@ -5,10 +5,27 @@ interface AIPanelProps {
   onAttachModeChange: (mode: boolean) => void;
 }
 
+interface AIMessage {
+  role: string;
+  text: string;
+  suggestions?: {
+    file: string;
+    changes: {
+      content: string;
+      range?: {
+        startLine: number;
+        startColumn: number;
+        endLine: number;
+        endColumn: number;
+      };
+    }[];
+  }[];
+}
+
 const AIPanel = forwardRef<any, AIPanelProps>(({ onAttachModeChange }, ref) => {
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const [uploadedFiles, setUploadedFiles] = useState<string[]>([]);
-  const [chatHistory, setChatHistory] = useState<{ role: string; text: string }[]>([]);
+  const [chatHistory, setChatHistory] = useState<AIMessage[]>([]);
   const [message, setMessage] = useState("");
   const [attachMode, setAttachMode] = useState(false);
   const [attachedFiles, setAttachedFiles] = useState<string[]>([]);
@@ -60,15 +77,39 @@ const AIPanel = forwardRef<any, AIPanelProps>(({ onAttachModeChange }, ref) => {
     setMessage("");
 
     try {
+      // Baca konten file yang dilampirkan
+      const filesContent = await Promise.all(
+        attachedFiles.map(async (file) => {
+          const response = await fetch(`/api/read-file?path=${encodeURIComponent(file)}`);
+          const data = await response.json();
+          return {
+            path: file,
+            content: data.content
+          };
+        })
+      );
+
       const response = await fetch("/api/chat-ai", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ message }),
+        body: JSON.stringify({ 
+          message,
+          files: filesContent
+        }),
       });
 
       const data = await response.json();
-      const aiResponse = { role: "ai", text: data.response };
-      setChatHistory([...chatHistory, newMessage, aiResponse]);
+      setChatHistory([...chatHistory, newMessage, data.response]);
+
+      // Jika ada saran perubahan, terapkan
+      if (data.response.suggestions) {
+        data.response.suggestions.forEach((suggestion) => {
+          // Trigger perubahan di CodeEditor
+          window.dispatchEvent(new CustomEvent('ai-suggestion', {
+            detail: suggestion
+          }));
+        });
+      }
     } catch (error) {
       console.error("Error sending message:", error);
     }
