@@ -1,60 +1,36 @@
-# AI Code Assistant – Web-based AI-powered Code Editor 🚀
+This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
 
-AI-powered web-based code editor yang memungkinkan pengeditan kode secara otomatis, mirip dengan GitHub Copilot, tetapi dengan fitur tambahan: **dukungan untuk file PDF dan gambar sebagai konteks tambahan**.
+## Getting Started
 
-## ✨ Fitur Utama
+First, run the development server:
 
-- ✅ **AI Code Editing** – Menulis, mengedit, dan refactoring kode otomatis berdasarkan instruksi pengguna.
-- ✅ **Web-based Editor** – Akses langsung dari browser tanpa perlu install software tambahan.
-- ✅ **File Attachment (PDF, Gambar, dll.)** – AI dapat membaca dokumentasi teknis atau screenshot error untuk memahami kode.
-- ✅ **Context-aware AI** – Memahami struktur proyek, dependencies, dan coding style.
-- ✅ **Auto Fix & Debugging** – AI memperbaiki bug berdasarkan error log atau screenshot.
-- ✅ **Git Integration** – Commit otomatis dan perbandingan perubahan kode sebelum diterapkan.
+```bash
+npm run dev
+# or
+yarn dev
+# or
+pnpm dev
+# or
+bun dev
+```
 
-## 🔧 Teknologi yang Digunakan
+Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
 
-- **Frontend:** Next.js + TailwindCSS
-- **Editor Kode:** Monaco Editor (VSCode)
-- **AI Model:** OpenAI GPT / Hugging Face Llama
-- **PDF Parsing:** pdf.js, PyMuPDF
-- **OCR (Gambar ke Teks):** Tesseract.js
-- **Backend:** Node.js (Express/NestJS)
-- **Database:** PostgreSQL / SQLite
-- **Git Integration:** isomorphic-git
+You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
 
-## 🚀 Cara Menggunakan
+This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
 
-1. **Clone repo ini**
-   ```bash
-   git clone https://github.com/your-username/ai-code-assistant.git  
-   cd ai-code-assistant
-   ```
-2. **Install dependencies**
-   ```bash
-   npm install
-   ```
-3. **Jalankan aplikasi**
-   ```bash
-   npm run dev
-   ```
-4. **Buka di browser**
-   ```
-   http://localhost:3000
-   ```
+## Learn More
 
-## 🌍 Roadmap Pengembangan
+To learn more about Next.js, take a look at the following resources:
 
-- ✅ MVP: Web-based editor + AI code assistant
-- 🔄 Iterasi 2: Tambahkan dukungan PDF parsing dan OCR
-- 🚀 Iterasi 3: Integrasi Git dan fitur auto-commit
+- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
+- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
 
-## 💥 Kontribusi
+You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
 
-Kami menerima kontribusi dari siapa saja! Jika tertarik, silakan buat **Pull Request** atau buka **Issue** di repo ini.
+## Deploy on Vercel
 
-## 🌟 Dukungan
+The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
 
-Jika kamu suka proyek ini, jangan lupa untuk memberikan **star** ⭐ pada repo ini. Terima kasih! 
-
----
-👨‍💻 Dibuat oleh [Your Name] | 🔗 [Website atau Profil GitHub Anda]
+Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
