@@ -69,6 +69,33 @@ const Sidebar = ({ onFileOpen }: { onFileOpen: (filePath: string) => void }) => 
     }));
   };
 
+  const handleDeleteProject = async (folderPath: string) => {
+    if (window.confirm('Are you sure you want to delete this project?')) {
+      try {
+        const response = await fetch('/api/delete-project', {
+          method: 'DELETE',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ path: folderPath }),
+        });
+
+        if (!response.ok) {
+          throw new Error('Failed to delete project');
+        }
+
+        // Refresh file list after deletion
+        const listResponse = await fetch("/api/list-files");
+        const data = await listResponse.json();
+        if (data.files) {
+          setFileStructure(data.files);
+        }
+      } catch (error) {
+        console.error("Failed to delete project:", error);
+      }
+    }
+  };
+
   // Render struktur file & folder
   const renderFileTree = (nodes: FileNode[], parentPath = "") => {
     return (
@@ -78,11 +105,24 @@ const Sidebar = ({ onFileOpen }: { onFileOpen: (filePath: string) => void }) => 
           return (
             <li key={fullPath} className="text-gray-300">
               {node.isDirectory ? (
-                <div
-                  className="font-bold cursor-pointer hover:text-white"
-                  onClick={() => toggleFolder(fullPath)}
-                >
-                  {openFolders[fullPath] ? "📂" : "📁"} {node.name}
+                <div className="flex items-center">
+                  <div
+                    className="font-bold cursor-pointer hover:text-white flex-grow"
+                    onClick={() => toggleFolder(fullPath)}
+                  >
+                    {openFolders[fullPath] ? "📂" : "📁"} {node.name}
+                  </div>
+                  {parentPath === "" && ( // Only show delete button for root folders
+                    <span
+                      className="cursor-pointer hover:text-red-500 px-2"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleDeleteProject(fullPath);
+                      }}
+                    >
+                      🗑️
+                    </span>
+                  )}
                 </div>
               ) : (
                 <div
