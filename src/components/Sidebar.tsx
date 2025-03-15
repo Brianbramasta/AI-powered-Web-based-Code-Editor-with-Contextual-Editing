@@ -162,7 +162,7 @@ const Sidebar = ({ onFileOpen, attachMode = false, onFileAttach }: SidebarProps)
   };
 
   return (
-    <div className="w-64 h-full bg-gray-900 text-white p-4">
+    <div className=" h-full bg-gray-900 text-white p-4">
       <h2 className="text-lg font-bold mb-4">File Explorer</h2>
 
       {/* Input file untuk memilih folder */}

@@ -24,3 +24,17 @@ body {
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
 }
+
+/* Remove old Resizer styles and replace with: */
+[data-panel-resize-handle] {
+  background: #2d3748;
+  transition: background-color 150ms;
+}
+
+[data-panel-resize-handle]:hover {
+  background: #4a5568;
+}
+
+.Pane {
+  overflow: auto;
+}

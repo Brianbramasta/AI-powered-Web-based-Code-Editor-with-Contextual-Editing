@@ -1,8 +1,9 @@
 "use client"
 import { useState, useRef } from "react";
+import { Panel, PanelGroup, PanelResizeHandle } from "react-resizable-panels";
 import Sidebar from "@/components/Sidebar";
 import CodeEditor from "@/components/CodeEditor";
-import { AIPanel } from "@/components/AIPanel"; // Fix: Use named import
+import { AIPanel } from "@/components/AIPanel";
 
 export default function Home() {
   const [selectedFile, setSelectedFile] = useState<string | null>(null);
@@ -16,25 +17,39 @@ export default function Home() {
   };
 
   return (
-    <div className="flex h-screen">
-      <Sidebar 
-        onFileOpen={setSelectedFile} 
-        attachMode={attachMode}
-        onFileAttach={handleFileAttach}
-      />
-
-      <div className="flex-1 bg-black text-white p-4">
-        {selectedFile ? (
-          <CodeEditor filePath={selectedFile} />
-        ) : (
-          <p className="text-gray-400 text-center mt-10">Select a file to start coding...</p>
-        )}
-      </div>
-
-      <AIPanel 
-        ref={aiPanelRef}
-        onAttachModeChange={setAttachMode} 
-      />
+    <div className="h-screen">
+      <PanelGroup direction="horizontal">
+        <Panel defaultSize={20} minSize={15}>
+          <Sidebar 
+            onFileOpen={setSelectedFile} 
+            attachMode={attachMode}
+            onFileAttach={handleFileAttach}
+          />
+        </Panel>
+        
+        <PanelResizeHandle className="w-2 bg-gray-800 hover:bg-gray-700 transition-colors" />
+        
+        <Panel defaultSize={55} minSize={30}>
+          <div className="h-full bg-black text-white">
+            {selectedFile ? (
+              <CodeEditor filePath={selectedFile} />
+            ) : (
+              <p className="text-gray-400 text-center mt-10">
+                Select a file to start coding...
+              </p>
+            )}
+          </div>
+        </Panel>
+        
+        <PanelResizeHandle className="w-2 bg-gray-800 hover:bg-gray-700 transition-colors" />
+        
+        <Panel defaultSize={25} minSize={20}>
+          <AIPanel 
+            ref={aiPanelRef}
+            onAttachModeChange={setAttachMode} 
+          />
+        </Panel>
+      </PanelGroup>
     </div>
   );
 }
