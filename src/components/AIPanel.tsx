@@ -1,5 +1,8 @@
 "use client"
-import { forwardRef, useImperativeHandle, useState } from "react";
+import { forwardRef, useImperativeHandle, useState, useEffect } from "react";
+import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
+import { vscDarkPlus } from 'react-syntax-highlighter/dist/esm/styles/prism';
+import { diffLines } from 'diff';
 
 interface AIPanelProps {
   onAttachModeChange: (mode: boolean) => void;
@@ -29,12 +32,17 @@ const AIPanel = forwardRef<any, AIPanelProps>(({ onAttachModeChange }, ref) => {
   const [message, setMessage] = useState("");
   const [attachMode, setAttachMode] = useState(false);
   const [attachedFiles, setAttachedFiles] = useState<string[]>([]);
+  const [isClient, setIsClient] = useState(false);
 
   useImperativeHandle(ref, () => ({
     handleFileAttach: (filePath: string) => {
       handleFileAttach(filePath);
     }
   }));
+
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     if (event.target.files && event.target.files.length > 0) {
@@ -135,6 +143,101 @@ const AIPanel = forwardRef<any, AIPanelProps>(({ onAttachModeChange }, ref) => {
     onAttachModeChange(newMode);
   };
 
+  const renderDiff = (suggestion: any) => {
+    // Add null checks and validation
+    if (!suggestion || !suggestion.changes || !suggestion.changes[0]) {
+      return null;
+    }
+
+    const originalContent = suggestion.originalContent || '';
+    const newContent = suggestion.changes[0].content || '';
+    
+    const diff = diffLines(originalContent, newContent);
+    
+    return (
+      <div className="mt-2 bg-gray-800 rounded p-2">
+        <div className="flex justify-between items-center mb-2">
+          <span className="text-sm text-gray-400">{suggestion.file}</span>
+          <div>
+            <button 
+              onClick={() => handleAcceptChanges(suggestion)}
+              className="px-2 py-1 bg-green-600 hover:bg-green-700 rounded mr-2"
+            >
+              Accept
+            </button>
+            <button 
+              onClick={() => handleRejectChanges(suggestion)}
+              className="px-2 py-1 bg-red-600 hover:bg-red-700 rounded"
+            >
+              Reject
+            </button>
+          </div>
+        </div>
+        <SyntaxHighlighter 
+          language="typescript"
+          style={vscDarkPlus}
+          className="text-sm"
+        >
+          {diff.map((part, index) => {
+            if (part.added) return `+ ${part.value}`;
+            if (part.removed) return `- ${part.value}`;
+            return `  ${part.value}`;
+          }).join('')}
+        </SyntaxHighlighter>
+      </div>
+    );
+  };
+
+  // Add these missing functions
+  const handleAcceptChanges = async (suggestion: any) => {
+    if (suggestion && suggestion.changes && suggestion.changes[0]) {
+      try {
+        // Simpan perubahan ke file
+        const response = await fetch('/api/save-file', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            path: suggestion.file,
+            content: suggestion.changes[0].content
+          }),
+        });
+
+        if (!response.ok) {
+          throw new Error('Failed to save changes');
+        }
+
+        // Trigger event untuk update CodeEditor
+        window.dispatchEvent(new CustomEvent('ai-suggestion', {
+          detail: suggestion
+        }));
+
+        // Hapus suggestion dari chat history
+        setChatHistory(prev => prev.map(msg => ({
+          ...msg,
+          suggestions: msg.suggestions?.filter(s => s.file !== suggestion.file)
+        })));
+
+      } catch (error) {
+        console.error('Error accepting changes:', error);
+        alert('Failed to apply changes');
+      }
+    }
+  };
+
+  const handleRejectChanges = (suggestion: any) => {
+    // Hapus suggestion dari chat history
+    setChatHistory(prev => prev.map(msg => ({
+      ...msg,
+      suggestions: msg.suggestions?.filter(s => s.file !== suggestion.file)
+    })));
+  };
+
+  if (!isClient) {
+    return <div className="p-4 border rounded bg-gray-800 text-white">Loading...</div>;
+  }
+
   return (
     <div className="p-4 border rounded bg-gray-800 text-white">
       <div className="flex justify-between items-center mb-4">
@@ -201,8 +304,13 @@ const AIPanel = forwardRef<any, AIPanelProps>(({ onAttachModeChange }, ref) => {
         <h3 className="text-md font-semibold">Chat dengan AI:</h3>
         <div className="h-40 overflow-y-auto p-2 bg-gray-700 rounded">
           {chatHistory.map((msg, index) => (
-            <div key={index} className={`p-1 ${msg.role === "user" ? "text-blue-400" : "text-green-400"}`}>
-              <strong>{msg.role === "user" ? "You" : "AI"}:</strong> {msg.text}
+            <div key={index}>
+              <div className={`p-1 ${msg.role === "user" ? "text-blue-400" : "text-green-400"}`}>
+                <strong>{msg.role === "user" ? "You" : "AI"}:</strong> {msg.text}
+              </div>
+              {msg.suggestions?.map((suggestion, idx) => (
+                renderDiff(suggestion)
+              ))}
             </div>
           ))}
         </div>

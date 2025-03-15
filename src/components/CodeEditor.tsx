@@ -23,11 +23,9 @@ const CodeEditor: React.FC<CodeEditorProps> = ({ filePath }) => {
     const handleAISuggestion = (event: CustomEvent) => {
       const suggestion = event.detail;
       if (suggestion.file === filePath) {
-        // Terapkan perubahan yang disarankan
-        suggestion.changes.forEach(change => {
-          setFileContent(change.content);
-          setIsDirty(true);
-        });
+        // Update content dan trigger save
+        setFileContent(suggestion.changes[0].content);
+        setIsDirty(false); // No need to save again since it's already saved
       }
     };
 

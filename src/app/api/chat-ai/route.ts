@@ -60,16 +60,49 @@ Please format your response to include:
       // Attempt to extract JSON from the response
       const match = response.match(/```json\n([\s\S]*?)\n```/);
       if (match) {
-        suggestions = JSON.parse(match[1]);
+        const parsed = JSON.parse(match[1]);
+        // Ensure suggestions is an array
+        suggestions = Array.isArray(parsed) ? parsed : [parsed];
       }
     } catch (e) {
       console.error('Failed to parse AI suggestions:', e);
     }
 
+    // Get original content for each suggestion
+    const enhancedSuggestions = await Promise.all(
+      suggestions.map(async (suggestion: any) => {
+        try {
+          // Use absolute path from UPLOAD_DIR
+          const filePath = suggestion.file.replace(/^\//, ''); // Remove leading slash
+          const response = await fetch(`http://localhost:${process.env.PORT || 3000}/api/read-file?path=${encodeURIComponent(filePath)}`);
+          
+          if (!response.ok) {
+            console.error(`Failed to get file content: ${response.statusText}`);
+            return {
+              ...suggestion,
+              originalContent: '' // Provide empty string as fallback
+            };
+          }
+
+          const data = await response.json();
+          return {
+            ...suggestion,
+            originalContent: data.content || ''
+          };
+        } catch (error) {
+          console.error(`Failed to get original content for ${suggestion.file}:`, error);
+          return {
+            ...suggestion,
+            originalContent: '' // Provide empty string as fallback
+          };
+        }
+      })
+    );
+
     const aiResponse = {
       role: "ai",
       text: response,
-      suggestions
+      suggestions: enhancedSuggestions
     };
 
     return NextResponse.json({ response: aiResponse });
